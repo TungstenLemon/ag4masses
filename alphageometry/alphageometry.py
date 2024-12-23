@@ -540,8 +540,9 @@ def bqsearch_init(worker_id):
     wkrpid = os.getpid()
     logging.info('Worker %d initializing. PID=%d', worker_id, wkrpid)
 
-    os.environ['CUDA_VISIBLE_DEVICES']=f"{worker_id}"
-    logging.info('Worker %d: CUDA_VISIBLE_DEVICES=%s', worker_id, os.environ['CUDA_VISIBLE_DEVICES'])
+    if 'CUDA_VISIBLE_DEVICES' in os.environ and os.environ['CUDA_VISIBLE_DEVICES'].strip():
+      os.environ['CUDA_VISIBLE_DEVICES']=f"{worker_id}"
+      logging.info('Worker %d: CUDA_VISIBLE_DEVICES=%s', worker_id, os.environ['CUDA_VISIBLE_DEVICES'])
 
     global model
     model = get_lm(_CKPT_PATH.value, _VOCAB_PATH.value)
