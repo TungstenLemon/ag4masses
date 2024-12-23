@@ -522,18 +522,37 @@ class BeamQueue:
   def __len__(self) -> int:
     return len(self.queue)
 
-#XXX
-def bqsearch_init():
+def bqsearch_init(worker_id):
+    # When using spawn or forkserver start method for multiprocessing.Pool, need to re-initialize
+    flags.FLAGS(sys.argv)
+    logging.use_absl_handler()
+    logging.set_verbosity(logging.INFO)
+    sys.setrecursionlimit(10000)
+
+    # Global variables initialized in main(). Need to re-initialize
+    #
+    # definitions of terms used in our domain-specific language.
+    global DEFINITIONS, RULES
+    DEFINITIONS = pr.Definition.from_txt_file(_DEFS_FILE.value, to_dict=True)
+    # load inference rules used in DD.
+    RULES = pr.Theorem.from_txt_file(_RULES_FILE.value, to_dict=True)
+
+    wkrpid = os.getpid()
+    logging.info('Worker %d initializing. PID=%d', worker_id, wkrpid)
+
+    os.environ['CUDA_VISIBLE_DEVICES']=f"{worker_id}"
+    logging.info('Worker %d: CUDA_VISIBLE_DEVICES=%s', worker_id, os.environ['CUDA_VISIBLE_DEVICES'])
+
     global model
-    logging.info('Worker initializing. PID=%d', os.getpid())
     model = get_lm(_CKPT_PATH.value, _VOCAB_PATH.value)
+    return wkrpid
 
 def bqsearch(i_nd, srch_inputs, out_file) -> tuple[int, bool, list]: # ( iNode, solved, [ (node, score) ] )
     pid = os.getpid()
     logging.info(f'Worker PID={pid} called for beam search node {i_nd}')
 
     prev_score, (g, string, pstring) = srch_inputs
-    logging.info(f'Worker PID={pid}: Decoding from {string}')
+    logging.info(f'Worker PID={pid}: Beam-searching and Decoding from {string}')
     outputs = model.beam_decode(string, eos_tokens=[';'])
 
     # translate lm output to the constructive language.
@@ -649,9 +668,15 @@ def run_alphageometry(
 
   pool = None
   if _N_WORKSERS.value == 1:
-    bqsearch_init()
+    bqsearch_init(0)
   else:
-    pool = multiprocessing.Pool(_N_WORKSERS.value, bqsearch_init)
+    # Default is 'fork' on Linux, does not work with CUDA. Need to use 'spawn' or 'forkserver'
+    multiprocessing.set_start_method('spawn')
+    pool = multiprocessing.Pool(_N_WORKSERS.value)
+
+    logging.info("Initializing workers")
+    wkrpids = pool.map(bqsearch_init, range(_N_WORKSERS.value))
+    logging.info("Worker PIDs: " + str(wkrpids))
 
   for depth in range(search_depth):
     logging.info(

@@ -26,9 +26,10 @@ import matplotlib.colors as mcolors
 import numpy as np
 from numpy.random import uniform as unif  # pylint: disable=g-importing-member
 
-
-matplotlib.use('TkAgg')
-
+# Do not import TkAgg in headless environment like Colab
+import os
+if not os.environ.get("DISPLAY") is None:
+  matplotlib.use('TkAgg')
 
 ATOM = 1e-12
 
