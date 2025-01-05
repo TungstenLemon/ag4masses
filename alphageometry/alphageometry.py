@@ -591,7 +591,7 @@ def bqsearch(i_nd, srch_inputs, out_file) -> tuple[int, bool, list]: # ( iNode, 
 
       try:
         if run_ddar(g_new, p_new, out_file):
-          logging.info('Worker PID={pid}: Solved.')
+          logging.info(f'Worker PID={pid}: Solved.')
           return (i_nd, True, None)
       except Exception as e:
           logging.info(f'Worker PID={pid}: Error in run_ddar: {e}')
