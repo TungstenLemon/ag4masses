@@ -12,13 +12,25 @@ AGLIB=$HOME/aglib
 AGDIR=$AG4MDIR/alphageometry
 export PYTHONPATH=$PYTHONPATH:$AGDIR:$AGLIB
 
+PROB_FILE=$AG4MDIR/data/ag4m_problems.txt
+PROB=square_angle15
+# alphageometry | ddar
+MODEL=alphageometry
+
 # stdout, solution is written here
-OUTFILE=$TESTDIR/ag.out
+OUTFILE=$TESTDIR/${PROB}.out
 # stderr, a lot of information, error message, log etc.
-ERRFILE=$TESTDIR/ag.err
+ERRFILE=$TESTDIR/${PROB}.log
 
 # stdout and stderr are written to both ERRFILF and console
 exec > >(tee $ERRFILE) 2>&1
+
+echo PROB=$PROB
+echo PROB_FILE=$PROB_FILE
+echo MODEL=$MODEL
+
+echo OUTFILE=$OUTFILE
+echo ERRFILE=$ERRFILE
 
 # BATCH_SIZE: number of outputs for each LM query
 # BEAM_SIZE: size of the breadth-first search queue
@@ -35,11 +47,6 @@ DEPTH=8
 NWORKERS=1
 
 #The results in Google's paper can be obtained by setting BATCH_SIZE=32, BEAM_SIZE=512, DEPTH=16
-
-PROB_FILE=$AG4MDIR/data/ag4m_problems.txt
-PROB=square_angle15
-# alphageometry | ddar
-MODEL=alphageometry #ddar #
 
 DATA=$AGLIB/ag_ckpt_vocab
 MELIAD_PATH=$AGLIB/meliad
