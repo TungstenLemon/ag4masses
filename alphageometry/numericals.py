@@ -704,7 +704,7 @@ def check_perp(points: list[Point]) -> bool:
 def check_cyclic(points: list[Point]) -> bool:
   points = list(set(points))
   (a, b, c, *ps) = points
-  if check_coll(a, b, c):
+  if check_coll([a, b, c]):
     return False
   circle = Circle(p1=a, p2=b, p3=c)
   for d in ps:
